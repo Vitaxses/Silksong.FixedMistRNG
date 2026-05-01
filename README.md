@@ -1,6 +1,3 @@
 # FixedMistRNG
 
-Does some cool stuff with the mist
-
-Dependencies:
-SSMP, FsmUtil & ModMenu
+SSMP addon that synchronizes The Mist for all players.

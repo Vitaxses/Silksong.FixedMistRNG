@@ -33,12 +33,12 @@ public partial class FixedMistPlugin : BaseUnityPlugin, IModMenuCustomMenu
 
     public AbstractMenuScreen BuildCustomMenu()
     {
-        PaginatedMenuScreenBuilder builder = new(Name);
+        PaginatedMenuScreenBuilder builder = new(ModMenuName());
 
         var adjustSeedDescription = "Randomize the seed if a player leaves The Mist or respawns at the entrance while no one else is inside";
 
-        ChoiceElement<bool> adjustSeedElement = new(LocalizedText.Raw("Randomize Seed"), ChoiceModels.ForBool("Disabled", "Enabled"));
-        SliderElement<int> seedElement = new(LocalizedText.Raw("Mist Seed"), SliderModels.ForInts(0, 1000));
+        ChoiceElement<bool> adjustSeedElement = new(LocalizedText.Raw("Randomize Seed"), ChoiceModels.ForBool("No", "Yes"));
+        SliderElement<int> seedElement = new(LocalizedText.Raw("Seed"), SliderModels.ForInts(0, 1000));
 
         builder.Add(adjustSeedElement);
         builder.Add(seedElement);

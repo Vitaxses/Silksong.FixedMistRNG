@@ -9,6 +9,7 @@ namespace FixedMistRNG.SSMPAddon;
 
 public class FixedMistServerAddon : ServerAddon
 {
+    internal static FixedMistServerAddon? Instance;
     public override bool NeedsNetwork => true;
 
     public override uint ApiVersion => 1u;
@@ -19,14 +20,16 @@ public class FixedMistServerAddon : ServerAddon
     private IServerAddonNetworkSender<S2CPacketId>? sender;
     private IServerAddonNetworkReceiver<C2SPacketId>? receiver;
 
-    private List<ushort> playersInMist = [];
+    private readonly List<ushort> playersInMist = [];
     private Random? rng;
 
     public int CurrentSeed { get; private set; }
-    private bool AdjustSeed;
+    public bool AdjustSeed { get; private set; }
 
     public override void Initialize(IServerApi Api)
     {
+        Instance = this;
+
         api = Api;
 
         api.CommandManager.RegisterCommand(new SetSeedCommand(this));
@@ -39,6 +42,8 @@ public class FixedMistServerAddon : ServerAddon
         api.ServerManager.PlayerDisconnectEvent += player => playersInMist.Remove(player.Id);
         api.ServerManager.PlayerConnectEvent += OnPlayerConnect;
         api.ServerManager.PlayerEnterSceneEvent += OnPlayerEnterScene;
+        
+        SetSeed(GenerateNewSeed());
     }
 
     private void OnPlayerEnterScene(IServerPlayer player)
@@ -71,6 +76,7 @@ public class FixedMistServerAddon : ServerAddon
             var playerSender = api!.ServerManager.GetPlayer(id)!;
             if (!playerSender.IsAuthorized)
             {
+                api.ServerManager.SendMessage(playerSender, "You have to be authorized for updating settings.");
                 return;
             }
 
@@ -81,7 +87,7 @@ public class FixedMistServerAddon : ServerAddon
         });
     }
 
-    public IPacketData? InstantiatePacket(C2SPacketId id)
+    public static IPacketData? InstantiatePacket(C2SPacketId id)
     {
         return id switch
         {
@@ -106,13 +112,16 @@ public class FixedMistServerAddon : ServerAddon
         return rng.Next(1001);
     }
 
-    public void SetSeed(int value)
+    public static void SetSeed(int value)
     {
-        CurrentSeed = value;
-        sender?.BroadcastSingleData(S2CPacketId.UpdateSeed, new UpdateSeedPacketData() { Seed = CurrentSeed, AdjustSeed = AdjustSeed });
+        if (Instance == null)
+            return;
+
+        Instance.CurrentSeed = value;
+        Instance.sender?.BroadcastSingleData(S2CPacketId.UpdateSeed, new UpdateSeedPacketData() { Seed = Instance.CurrentSeed, AdjustSeed = Instance.AdjustSeed });
     }
 
-    public bool IsMist(string scene)
+    private static bool IsMist(string scene)
     {
         return scene.StartsWith("Dust_Maze") && !scene.EndsWith("_Last_Hall") && !scene.EndsWith("_entrance");
     }

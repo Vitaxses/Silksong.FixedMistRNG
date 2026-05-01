@@ -40,7 +40,7 @@ public class FixedMistClientAddon : ClientAddon
         });
     }
 
-    public IPacketData? InstantiatePacket(S2CPacketId id)
+    public static IPacketData? InstantiatePacket(S2CPacketId id)
     {
         return id switch
         {
