@@ -1,5 +1,3 @@
-using FixedMistRNG.SSMPAddon;
-using HarmonyLib;
 using UnityEngine;
 
 namespace FixedMistRNG;
@@ -19,7 +17,7 @@ internal static class ActivateRandomChildrenPatch
             transform.gameObject.SetActive(false);
         }
 
-        System.Random rng = new(FixedMistClientAddon.Instance!.GetSeed(__instance.gameObject));
+        System.Random rng = new(FixedMistClientAddon.Instance!.GetSeed());
         for (int i = rng.Next(__instance.amountMin, __instance.amountMax); i > 0f; i -= 1)
         {
             int index = rng.Next(0, __instance.transform.childCount);

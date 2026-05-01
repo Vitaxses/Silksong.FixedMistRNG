@@ -1,8 +1,8 @@
-using System;
 using SSMP.Api.Client;
 using SSMP.Api.Client.Networking;
 using SSMP.Networking.Packet;
-using UnityEngine;
+
+using UnityEngine.SceneManagement;
 
 namespace FixedMistRNG.SSMPAddon;
 
@@ -18,8 +18,8 @@ public class FixedMistClientAddon : ClientAddon
     private IClientAddonNetworkSender<C2SPacketId>? sender;
     private IClientAddonNetworkReceiver<S2CPacketId>? receiver;
 
-    public bool ReceivedSettingUpdate { get; set; }
     public int CurrentSeed { get; private set; }
+    public bool AdjustSeed { get; private set; }
 
     public override void Initialize(IClientApi clientApi)
     {
@@ -36,12 +36,7 @@ public class FixedMistClientAddon : ClientAddon
         receiver?.RegisterPacketHandler<UpdateSeedPacketData>(S2CPacketId.UpdateSeed, packetData =>
         {
             CurrentSeed = packetData.Seed;
-        });
-
-        receiver?.RegisterPacketHandler<SetSettingPacketData>(S2CPacketId.SetSetting, packetData =>
-        {
-            ReceivedSettingUpdate = true;
-            FixedMistPlugin.AdjustSeed.Value = packetData.AdjustSeed;
+            AdjustSeed = packetData.AdjustSeed;
         });
     }
 
@@ -50,15 +45,19 @@ public class FixedMistClientAddon : ClientAddon
         return id switch
         {
             S2CPacketId.UpdateSeed => new UpdateSeedPacketData(),
-            S2CPacketId.SetSetting => new SetSettingPacketData(),
             _ => null,
         };
     }
 
-    public void SendOptionUpdate()
+    public void SendOptionUpdate(int Seed, bool AdjustSeed)
     {
-        if (sender != null && IsConnected())
-            sender.SendSingleData(C2SPacketId.UpdateSetting, new SetSettingPacketData() { AdjustSeed = FixedMistPlugin.AdjustSeed.Value });
+        if (CurrentSeed == Seed && this.AdjustSeed == AdjustSeed)
+            return;
+
+        if (sender == null || !IsConnected())
+            return;
+            
+        sender.SendSingleData(C2SPacketId.UpdateSettings, new UpdateSeedPacketData() { Seed = Seed, AdjustSeed = AdjustSeed });
     }
 
     internal static bool IsConnected()
@@ -66,8 +65,8 @@ public class FixedMistClientAddon : ClientAddon
         return Instance != null && Instance.ClientApi != null && Instance.ClientApi.NetClient.IsConnected;
     }
 
-    internal int GetSeed(GameObject go)
+    internal int GetSeed()
     {
-        return CurrentSeed ^ go.scene.name.GetHashCode();
+        return CurrentSeed ^ SceneManager.GetActiveScene().name.GetHashCode();
     }
 }

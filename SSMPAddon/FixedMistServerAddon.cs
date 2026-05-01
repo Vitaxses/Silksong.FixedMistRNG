@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+
 using FixedMistRNG.SSMPAddon.Command.Server;
 using SSMP.Api.Server;
 using SSMP.Api.Server.Networking;
@@ -61,24 +61,23 @@ public class FixedMistServerAddon : ServerAddon
             playersInMist.Add(player.Id);
         }
             
-        sender?.SendSingleData(S2CPacketId.UpdateSeed, new UpdateSeedPacketData() { Seed = CurrentSeed }, player.Id);
-        sender?.SendSingleData(S2CPacketId.SetSetting, new SetSettingPacketData() { AdjustSeed = AdjustSeed }, player.Id);
+        sender?.SendSingleData(S2CPacketId.UpdateSeed, new UpdateSeedPacketData() { Seed = CurrentSeed, AdjustSeed = AdjustSeed }, player.Id);
     }
 
     private void RegisterPacketHandlers()
     {
-        receiver?.RegisterPacketHandler<SetSettingPacketData>(C2SPacketId.UpdateSetting, (id, packetData) =>
+        receiver?.RegisterPacketHandler<UpdateSeedPacketData>(C2SPacketId.UpdateSettings, (id, packetData) =>
         {
-            AdjustSeed = packetData.AdjustSeed;
             var playerSender = api!.ServerManager.GetPlayer(id)!;
-            api.ServerManager.BroadcastMessage($"{playerSender.Username} updated FixedMistRNG settings.");
-            foreach (var player in api.ServerManager.Players)
+            if (!playerSender.IsAuthorized)
             {
-                if (player == playerSender)
-                    continue;
+                return;
+            }
 
-                sender?.SendSingleData(S2CPacketId.SetSetting, new SetSettingPacketData() { AdjustSeed = AdjustSeed }, player.Id);
-            } 
+            CurrentSeed = packetData.Seed;
+            AdjustSeed = packetData.AdjustSeed;
+            api.ServerManager.BroadcastMessage($"{playerSender.Username} updated FixedMistRNG settings.");
+            sender?.BroadcastSingleData(S2CPacketId.UpdateSeed, new UpdateSeedPacketData() { Seed = CurrentSeed, AdjustSeed = AdjustSeed });
         });
     }
 
@@ -86,7 +85,7 @@ public class FixedMistServerAddon : ServerAddon
     {
         return id switch
         {
-            C2SPacketId.UpdateSetting => new SetSettingPacketData(),
+            C2SPacketId.UpdateSettings => new UpdateSeedPacketData(),
             _ => null,
         };
     }
@@ -110,7 +109,7 @@ public class FixedMistServerAddon : ServerAddon
     public void SetSeed(int value)
     {
         CurrentSeed = value;
-        sender?.BroadcastSingleData(S2CPacketId.UpdateSeed, new UpdateSeedPacketData() { Seed = CurrentSeed });
+        sender?.BroadcastSingleData(S2CPacketId.UpdateSeed, new UpdateSeedPacketData() { Seed = CurrentSeed, AdjustSeed = AdjustSeed });
     }
 
     public bool IsMist(string scene)

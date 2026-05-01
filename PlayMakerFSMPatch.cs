@@ -1,11 +1,3 @@
-using System;
-using System.Linq;
-using FixedMistRNG.SSMPAddon;
-using HarmonyLib;
-using HutongGames.PlayMaker;
-using HutongGames.PlayMaker.Actions;
-using Silksong.FsmUtil;
-
 namespace FixedMistRNG;
 
 [HarmonyPatch(typeof(PlayMakerFSM), nameof(PlayMakerFSM.Start))]
@@ -22,9 +14,9 @@ internal static class PlayMakerFSMPatch
         WraithSpawner(__instance);
     }
 
-    private static void SetNode(PlayMakerFSM fsm, FsmGameObject? nodes)
+    private static void SetNode(PlayMakerFSM fsm, FsmGameObject? nodes, Random rng)
     {
-        if (nodes == null || nodes.value == null)
+        if (nodes == null || nodes.Value == null)
             return;
 
         var transform = nodes.Value.transform;
@@ -32,7 +24,7 @@ internal static class PlayMakerFSMPatch
         if (transform.childCount == 0)
             return;
 
-        var nextNode = nodes.Value.transform.GetChild(0).gameObject;
+        var nextNode = transform.GetChild(rng.Next(transform.childCount)).gameObject;
 
         fsm.FindGameObjectVariable("Next Node")!.Value = nextNode;
     }
@@ -42,25 +34,30 @@ internal static class PlayMakerFSMPatch
         if (fsm.FsmName != "mist_maze_controller")
             return;
 
+        Random rng = new(FixedMistClientAddon.Instance!.GetSeed());
+
         FsmState silkfliesState = fsm.GetState("Set Silkflies")!;
         silkfliesState.DisableAction(1);
+        var silkFlyNodes = fsm.FindGameObjectVariable("Silkfly Nodes");
         silkfliesState.InsertMethod(1, (action) =>
         {
-            SetNode(fsm, fsm.FindGameObjectVariable("Silkfly Nodes"));
+            SetNode(fsm, silkFlyNodes, rng);
         });
 
         FsmState trapState = fsm.GetState("Set Traps")!;
         trapState.DisableAction(0);
+        var traps = fsm.FindGameObjectVariable("Trap Sets");
         trapState.InsertMethod(0, (action) =>
         {
-            SetNode(fsm, fsm.FindGameObjectVariable("Trap Sets"));
+            SetNode(fsm, traps, rng);
         });
 
         FsmState wraithState = fsm.GetState("Set Wraiths")!;
         wraithState.DisableAction(0);
+        var wraithNodes = fsm.FindGameObjectVariable("Wraith Nodes");
         wraithState.InsertMethod(0, (action) =>
         {
-            SetNode(fsm, fsm.FindGameObjectVariable("Wraith Nodes"));
+            SetNode(fsm, wraithNodes, rng);
         });
     }
 
@@ -69,7 +66,7 @@ internal static class PlayMakerFSMPatch
         if (fsm.FsmName != "Control" || !fsm.name.StartsWith("Wraith Summoner"))
             return;
 
-        Random rng = new(FixedMistClientAddon.Instance!.CurrentSeed);
+        Random rng = new(FixedMistClientAddon.Instance!.GetSeed());
 
         FsmState chooseState = fsm.GetState("Choose")!;
         var sendRandom = chooseState.GetAction<SendRandomEvent>(0)!;

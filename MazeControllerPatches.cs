@@ -1,14 +1,11 @@
 using System.Collections.Generic;
-using System.Linq;
-using FixedMistRNG.SSMPAddon;
-using HarmonyLib;
 
 namespace FixedMistRNG;
 
 [HarmonyPatch(typeof(MazeController))]
 internal static class MazeControllerPatches
 {
-    private static System.Random? rng;
+    private static Random? rng;
 
     [HarmonyPatch(nameof(MazeController.LinkDoors))]
     [HarmonyPrefix]
@@ -191,10 +188,10 @@ internal static class MazeControllerPatches
     private static void Prefix_Activate(MazeController __instance)
     {
         if (FixedMistClientAddon.IsConnected())
-            rng = new System.Random(FixedMistClientAddon.Instance!.GetSeed(__instance.gameObject));
+            rng = new Random(FixedMistClientAddon.Instance!.GetSeed());
     }
 
-    public static void Shuffle<T>(this IList<T> list, System.Random rng)
+    public static void Shuffle<T>(this IList<T> list, Random rng)
     {
         for (int i = list.Count - 1; i > 0; i--)
         {
@@ -205,6 +202,8 @@ internal static class MazeControllerPatches
 
     /* Unused stuff
     
+    Works but sometimes unreliable
+
     private static Random.State lastState;
 
     [HarmonyPatch(typeof(MazeController), nameof(MazeController.Activate))]

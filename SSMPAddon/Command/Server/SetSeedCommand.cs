@@ -14,17 +14,17 @@ public class SetSeedCommand(FixedMistServerAddon addon) : IServerCommand
     {
         if (!commandSender.IsAuthorized || arguments.Length < 2)
         {
-            commandSender.SendMessage($"[FixedMistRNG] Current Seed: {addon.CurrentSeed}");
+            commandSender.SendMessage($"Current seed: {addon.CurrentSeed}");
             return;
         }
 
         if (int.TryParse(arguments[1], out int result))
         {
             addon.SetSeed(result);
-            commandSender.SendMessage($"[FixedMistRNG] Successfully changed the seed to {addon.CurrentSeed}");
+            commandSender.SendMessage($"Successfully changed the seed to {addon.CurrentSeed}");
         } else
         {
-            commandSender.SendMessage("[FixedMistRNG] Please provide a number");
+            commandSender.SendMessage("Please provide an integer");
         }
     }
 }
