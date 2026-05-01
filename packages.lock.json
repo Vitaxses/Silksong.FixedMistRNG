@@ -72,9 +72,9 @@
       },
       "Silksong.SSMP": {
         "type": "Direct",
-        "requested": "[0.0.6, )",
-        "resolved": "0.0.6",
-        "contentHash": "kxsjTGSWMg46u25Tiyb1DjceGcLn4PA4BO1OQPWapgwWgjkV6ySYWLr9O2W1gwfaIF24viz9YKsWCRCC/+sUMw=="
+        "requested": "[0.2.0, )",
+        "resolved": "0.2.0",
+        "contentHash": "rOjFzu/TN8IYL6NaSsb2BncO+VfAtOJ7iQZA3Ltl7fz3IHhS7l6aG1yl6O+2YO6mMe8NPU8V7WyaAfipXxCQmA=="
       },
       "UnityEngine.Modules": {
         "type": "Direct",
