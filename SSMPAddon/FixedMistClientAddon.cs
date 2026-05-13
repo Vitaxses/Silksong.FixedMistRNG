@@ -37,6 +37,13 @@ public class FixedMistClientAddon : ClientAddon
         {
             CurrentSeed = packetData.Seed;
             AdjustSeed = packetData.AdjustSeed;
+            MazeController newestInstance = MazeController.NewestInstance;
+            if (newestInstance && newestInstance.IsCapScene)
+            {
+                MazeControllerPatches.Postfix_Activate();
+                MazeControllerPatches.SaveAndInitRngState(newestInstance);
+                newestInstance.LinkDoors(newestInstance.entryDoors);
+            }
         });
     }
 

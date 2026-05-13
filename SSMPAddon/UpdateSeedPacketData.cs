@@ -1,5 +1,7 @@
 using SSMP.Networking.Packet;
 
+namespace FixedMistRNG.SSMPAddon;
+
 public class UpdateSeedPacketData : IPacketData
 {
     public bool IsReliable => true;
